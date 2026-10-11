@@ -14,8 +14,13 @@ struct Args {
     #[arg(required = true)]
     paths: Vec<String>,
 
+    /// Include hidden files and directories
     #[arg(short = 'a', long = "all")]
     all: bool,
+
+    /// Print file path banners before each file's contents
+    #[arg(short = 'H', long = "headers")]
+    headers: bool,
 }
 
 fn is_hidden(entry: &DirEntry) -> bool {
@@ -29,8 +34,6 @@ fn main() {
     let args = Args::parse();
     
     for path in &args.paths {
-        println!("Traversing: {}", path);
-
         let walker = WalkDir::new(path).into_iter();
 
         let filtered_walker = walker.filter_entry(|e| {
@@ -39,7 +42,20 @@ fn main() {
 
         for entry in filtered_walker {
             match entry {
-                Ok(val) => println!("  -> {}", val.path().display()),
+                Ok(val) => {
+                    if val.file_type().is_file() {
+                        let file_path = val.path();
+                        
+                        if args.headers {
+                            println!("==> {} <==", file_path.display());
+                        }
+
+                        match std::fs::read_to_string(file_path) {
+                            Ok(contents) => print!("{}", contents),
+                            Err(e) => eprintln!("Error reading file: {}", e),
+                        }
+                    }
+                }
                 Err(e) => eprintln!("Error: {}", e),
             }
         }

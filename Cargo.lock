@@ -135,7 +135,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rcat"
+name = "rcat-rs"
 version = "1.0.0"
 dependencies = [
  "clap",

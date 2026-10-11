@@ -4,10 +4,9 @@ use walkdir::{DirEntry, WalkDir};
 #[derive(Parser, Debug)]
 #[command(
     name = "rcat",
-    author,
+    author = "KingAJK30",
     version,
     about = "Recursively traverses directories and concatenates file contents",
-    long_about = None
 )]
 struct Args {
     /// Target paths (files or directories)
@@ -91,11 +90,14 @@ fn main() {
                         }
 
                         if args.headers {
-                            println!("==> {} <==", file_path.display());
+                            println!("===> {} <===", file_path.display());
                         }
 
-                        match std::fs::read_to_string(file_path) {
-                            Ok(contents) => print!("{}", contents),
+                        match std::fs::read(file_path) {
+                            Ok(bytes) => {
+                                let contents = String::from_utf8_lossy(&bytes);
+                                print!("{}", contents);
+                            }
                             Err(e) => eprintln!("Error reading file: {}", e),
                         }
                     }

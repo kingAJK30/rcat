@@ -48,22 +48,19 @@ fn matches_extension(
         .and_then(|e| e.to_str())
         .map(|s| s.to_lowercase());
 
+    let normalize = |e: &str| e.trim().trim_start_matches('.').to_lowercase();
+
     if let Some(ref ext) = file_ext {
-        if excluded_exts
-            .iter()
-            .any(|e| e.trim_start_matches('.').to_lowercase() == *ext)
-        {
+        if excluded_exts.iter().any(|e| normalize(e) == *ext) {
             return false;
         }
-    } else if excluded_exts.contains(&"".to_string()) {
+    } else if excluded_exts.iter().any(|e| normalize(e).is_empty()) {
         return false;
     }
 
     if !allowed_exts.is_empty() {
         match file_ext {
-            Some(ref ext) => allowed_exts
-                .iter()
-                .any(|e| e.trim_start_matches('.').to_lowercase() == *ext),
+            Some(ref ext) => allowed_exts.iter().any(|e| normalize(e) == *ext),
             None => false,
         }
     } else {

@@ -13,7 +13,12 @@ A fast, Unix-inspired recursive file concatenation tool written in Rust.
 
 ## Installation
 
-### Via Cargo
+### Via Crates.io (Recommended)
+```bash
+cargo install rcat-rs
+```
+
+### Via Cargo (From GitHub)
 ```bash
 cargo install --git https://github.com/KingAJK30/rcat.git --tag v1.0.0
 ```

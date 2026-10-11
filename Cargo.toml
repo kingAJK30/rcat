@@ -2,6 +2,13 @@
 name = "rcat"
 version = "1.0.0"
 edition = "2024"
+authors = ["KingAJK30 <86845258+kingAJK30@users.noreply.github.com>"]
+description = "A fast, Unix-inspired recursive file concatenation tool"
+license = "MPL-2.0"
+repository = "https://github.com/KingAJK30/rcat"
+readme = "README.md"
+keywords = ["cli", "concatenate", "recursive", "utility"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }

@@ -1,6 +1,6 @@
 [package]
 name = "rcat-rs"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2024"
 authors = ["KingAJK30 <86845258+kingAJK30@users.noreply.github.com>"]
 description = "A fast, Unix-inspired recursive file concatenation tool"

@@ -1,4 +1,5 @@
 use clap::Parser;
+use std::io::{self, BufReader, Write};
 use walkdir::{DirEntry, WalkDir};
 
 #[derive(Parser, Debug)]
@@ -13,9 +14,9 @@ struct Args {
     #[arg(required = true)]
     paths: Vec<String>,
 
-    /// Include hidden files and directories
-    #[arg(short = 'a', long = "all")]
-    all: bool,
+    /// Ignore hidden files and directories
+    #[arg(short = 'i', long = "ignore")]
+    ignore: bool,
 
     /// Print file path banners before each file's contents
     #[arg(short = 'H', long = "headers")]
@@ -68,13 +69,31 @@ fn matches_extension(
     }
 }
 
+fn process_file(
+    file_path: &std::path::Path,
+    headers: bool,
+    stdout: &mut io::Stdout,
+) -> io::Result<()> {
+    if headers {
+        writeln!(stdout, "===> {} <===", file_path.display())?;
+    }
+
+    let file = std::fs::File::open(file_path)?;
+    let mut reader = BufReader::new(file);
+    io::copy(&mut reader, stdout)?;
+
+    Ok(())
+}
+
 fn main() {
     let args = Args::parse();
+    let mut has_error = false;
+    let mut stdout = io::stdout();
 
     for path in &args.paths {
         let walker = WalkDir::new(path).into_iter();
-
-        let filtered_walker = walker.filter_entry(|e| args.all || !is_hidden(e));
+        
+        let filtered_walker = walker.filter_entry(|e| !args.ignore || !is_hidden(e));
 
         for entry in filtered_walker {
             match entry {
@@ -86,21 +105,34 @@ fn main() {
                             continue;
                         }
 
-                        if args.headers {
-                            println!("===> {} <===", file_path.display());
-                        }
-
-                        match std::fs::read(file_path) {
-                            Ok(bytes) => {
-                                let contents = String::from_utf8_lossy(&bytes);
-                                print!("{}", contents);
+                        if let Err(e) = process_file(file_path, args.headers, &mut stdout) {
+                            if e.kind() == io::ErrorKind::BrokenPipe {
+                                std::process::exit(0);
                             }
-                            Err(e) => eprintln!("Error reading file: {}", e),
+                            eprintln!("rcat: {}: {}", file_path.display(), e);
+                            has_error = true;
                         }
                     }
                 }
-                Err(e) => eprintln!("Error: {}", e),
+                Err(e) => {
+                    if let Some(path) = e.path() {
+                        eprintln!("rcat: {}: {}", path.display(), e);
+                    } else {
+                        eprintln!("rcat: {}", e);
+                    }
+                    has_error = true;
+                }
             }
         }
+    }
+
+    if let Err(e) = stdout.flush() {
+        if e.kind() == io::ErrorKind::BrokenPipe {
+            std::process::exit(0);
+        }
+    }
+
+    if has_error {
+        std::process::exit(1);
     }
 }
